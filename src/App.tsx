@@ -6,6 +6,7 @@ import IntroStatement from './components/IntroStatement'
 import AccountPanel from './components/AccountPanel'
 import CaseStudy from './components/CaseStudy'
 import { Attribution, Footer } from './components/Attribution'
+import FeedTunnel from './components/FeedTunnel'
 import HorizontalShowcase, { MobileShowcase } from './components/HorizontalShowcase'
 import FullscreenViewer from './components/FullscreenViewer'
 import EditToolbar from './components/EditToolbar'
@@ -72,6 +73,7 @@ export default function App() {
 
       <Hero onOpenAccount={jump} />
       <IntroStatement onOpenAccount={jump} />
+      <FeedTunnel onOpenAccount={jump} />
       <HorizontalShowcase />
       <MobileShowcase />
 

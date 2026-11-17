@@ -118,6 +118,21 @@ npm run build && npx serve dist
 3. Export the content JSON from the data panel and paste it into
    `src/content/accounts.ts` so the content is permanent, not just in your browser.
 
+## The Feed Tunnel (the set piece)
+
+`src/components/FeedTunnel.tsx` — a 360vh section that pins a full-viewport 3D stage. Scroll
+progress drives **18 unique frames** (every gallery image from both accounts, interleaved so the
+worlds alternate) travelling toward the camera through depth layers, from `z: -2600` to past the
+viewer, scaling and fading as they pass. The camera itself rotates on X/Y and drifts laterally, the
+gold glow cross-fades to signal red as the tunnel moves from Padma to Combat, and each frame is a
+button that jumps to its account. A HUD shows a live frame counter and progress rail.
+
+- One `useScroll` target and spring-smoothed progress — no per-element scroll listeners.
+- `wrap01()` guards the lifecycle maths (JS `%` can go negative and would invert depth).
+- Reduced motion swaps the tunnel for a static gallery grid; under 768px it renders 12 frames
+  instead of 18, with a shallower stage and taller images.
+- Every frame title/caption comes from the content model, so the tunnel stays editable.
+
 ## Motion, backdrop and scroll behaviour
 
 - **Scroll-driven backdrop** (`src/components/ScrollBackdrop.tsx`) — a fixed canvas layer behind
