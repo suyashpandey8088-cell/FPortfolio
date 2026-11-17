@@ -180,6 +180,21 @@ try {
   check('backdrop: pauses when tab hidden', backdropSrc.includes('visibilitychange'))
   check('backdrop: caps dpr on low-power', backdropSrc.includes('devicePixelRatio'))
 
+  // the immersive tunnel: one scroll value, no per-frame listeners
+  const tunnelSrc = await readFile(new URL('../src/components/FeedTunnel.tsx', import.meta.url), 'utf8')
+  check('tunnel: uses a single scroll target', (tunnelSrc.match(/useScroll\(/g) || []).length === 1)
+  check('tunnel: no scroll event listeners', !tunnelSrc.includes("addEventListener('scroll'"))
+  check('tunnel: reduced-motion fallback', tunnelSrc.includes("prefers-reduced-motion"))
+  check('tunnel: positive modulo helper', tunnelSrc.includes('function wrap01'))
+  check('tunnel: no negative-prone raw modulo in transforms', !/\(value \* [\d.]+ - start \+ [\d.]+\) % 1/.test(tunnelSrc))
+  check('tunnel: dvh stage', tunnelSrc.includes('100dvh'))
+  check('tunnel: no 100vh', !tunnelSrc.includes('100vh'))
+  check('tunnel: 3d stage', tunnelSrc.includes('preserve-3d') && tunnelSrc.includes('perspective'))
+  check('tunnel: frames come from the content model', tunnelSrc.includes('account.gallery.slice'))
+  const appForTunnel = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8')
+  check('tunnel: mounted in App', /<FeedTunnel\b/.test(appForTunnel))
+  check('tunnel: no unsupported duration step', !tunnelSrc.includes('duration-400'))
+
   // sections must be translucent or the backdrop is invisible
   const appSrc = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8')
   check('backdrop is mounted', appSrc.includes('<ScrollBackdrop'))
