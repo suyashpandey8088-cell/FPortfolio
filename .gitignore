@@ -4,3 +4,4 @@ dist
 *.local
 .arena
 .vite
+*.tsbuildinfo
