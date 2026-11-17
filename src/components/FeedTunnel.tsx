@@ -95,7 +95,7 @@ export default function FeedTunnel({ onOpenAccount }: { onOpenAccount: (id: stri
 
   if (reduced) {
     return (
-      <section id="tunnel" className="relative border-y border-white/10 bg-ink/50 py-20">
+      <section id="tunnel" className="relative border-y border-white/10 bg-transparent py-20">
         <div className="mx-auto max-w-[1600px] px-6 md:px-10">
           <p className="kicker text-gold/80">The feed tunnel</p>
           <h2 className="mt-3 text-[clamp(1.8rem,4vw,3rem)] font-[900] uppercase leading-[0.95] tracking-tight text-bone">
@@ -126,7 +126,7 @@ export default function FeedTunnel({ onOpenAccount }: { onOpenAccount: (id: stri
     <section
       ref={sectionRef}
       id="tunnel"
-      className="relative border-y border-white/10 bg-ink/55"
+      className="relative border-y border-white/10 bg-transparent"
       style={{ height: `${compact ? 240 : 360}vh` }}
       aria-label="Scroll-driven feed gallery"
     >

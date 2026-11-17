@@ -15,7 +15,7 @@ export default function IntroStatement({ onOpenAccount }: { onOpenAccount: (id: 
   const combat = content.accounts[1]
 
   return (
-    <section id="feed" ref={ref} className="relative overflow-hidden border-b border-white/10 bg-ink/70">
+    <section id="feed" ref={ref} className="relative overflow-hidden border-b border-white/10 bg-transparent">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
 
       <div className="mx-auto max-w-[1600px] px-6 py-24 md:px-10 md:py-32">

@@ -70,7 +70,7 @@ export default function Hero({ onOpenAccount }: { onOpenAccount: (id: string) =>
   return (
     <section
       id="top"
-      className="relative min-h-[100svh] w-full overflow-hidden border-b border-white/10 bg-ink/40"
+      className="relative min-h-[100svh] w-full overflow-hidden border-b border-white/10 bg-transparent"
       onPointerMove={(event) => {
         const { innerWidth, innerHeight } = window
         setPointer({ x: event.clientX / innerWidth - 0.5, y: event.clientY / innerHeight - 0.5 })
