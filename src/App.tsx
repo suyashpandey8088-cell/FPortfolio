@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion, useScroll, useSpring } from 'framer-motion'
+import ScrollBackdrop from './components/ScrollBackdrop'
 import Hero from './components/Hero'
 import IntroStatement from './components/IntroStatement'
 import AccountPanel from './components/AccountPanel'
@@ -33,7 +34,10 @@ export default function App() {
   }
 
   return (
-    <main className="noise relative min-h-screen bg-ink">
+    <main className="noise relative min-h-screen">
+      {/* scroll-driven atmosphere sits behind every section */}
+      <ScrollBackdrop />
+
       {/* scroll progress */}
       <motion.div
         style={{ scaleX: progress }}
@@ -74,7 +78,7 @@ export default function App() {
       {content.accounts.map((account) => (
         <div key={account.id}>
           <AccountPanel account={account} />
-          <div className="relative border-b border-white/10 bg-ink px-6 pb-8 md:px-10">
+          <div className="relative border-b border-white/10 bg-ink/60 px-6 pb-8 md:px-10">
             <div className="mx-auto max-w-[1600px]">
               <CaseStudy account={account} />
             </div>

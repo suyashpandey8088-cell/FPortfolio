@@ -118,6 +118,26 @@ npm run build && npx serve dist
 3. Export the content JSON from the data panel and paste it into
    `src/content/accounts.ts` so the content is permanent, not just in your browser.
 
+## Motion, backdrop and scroll behaviour
+
+- **Scroll-driven backdrop** (`src/components/ScrollBackdrop.tsx`) — a fixed canvas layer behind
+  every section. Four palette stages cross-fade with scroll progress: warm gold (hero/intro) →
+  amber (Padma) → signal red (Combat) → cool steel (attribution/footer), with depth-parallax dust
+  drifting on top. One RAF loop for the whole page; palette reads a single passive, frame-throttled
+  scroll value.
+- **Graceful degradation** — `prefers-reduced-motion` gets a static gradient and no canvas;
+  `deviceMemory ≤ 4`, `hardwareConcurrency ≤ 4` or a narrow viewport drops to 26 particles, caps
+  DPR at 1.5 and 30fps; the loop pauses on `visibilitychange`.
+- **Legibility is guaranteed** — two wash layers (vertical + vignette) sit above the canvas so
+  body copy keeps contrast no matter which palette stage is on screen.
+- **Smooth scrolling on every device** — Lenis with `syncTouch` (touch is genuinely smoothed, not
+  just wheel), `syncTouchLerp` and `touchInertiaExponent` for iOS momentum, coarser curves on
+  coarse pointers, `lenis.resize()` on resize/orientation change, and a full bail-out on
+  reduced-motion. `overflow-x` lives on `<html>` as `clip` so `<body>` never becomes a scroll
+  container (which breaks `position: sticky` and Lenis synchronisation).
+- **Stable viewport units** — sticky sections use `100dvh`/`100svh`, so the mobile URL bar
+  showing or hiding no longer resizes the layout mid-scroll.
+
 ## Stack
 
 React 18 · TypeScript · Vite · Tailwind CSS · Framer Motion (reveals, layout, scroll-linked

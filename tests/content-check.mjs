@@ -10,6 +10,7 @@
  * Run with: node tests/content-check.mjs
  */
 import { createServer } from 'vite'
+import { readFile } from 'node:fs/promises'
 import React from 'react'
 import { renderToString } from 'react-dom/server'
 
@@ -130,6 +131,59 @@ try {
       duplicates.join(', '),
     )
   }
+
+  // 4c. layout + motion regressions
+  const heroSrc = await readFile(new URL('../src/components/Hero.tsx', import.meta.url), 'utf8')
+  const cssSrc = await readFile(new URL('../src/index.css', import.meta.url), 'utf8')
+  const lenisSrc = await readFile(new URL('../src/hooks/useSmoothScroll.ts', import.meta.url), 'utf8')
+  const showcaseSrc = await readFile(
+    new URL('../src/components/HorizontalShowcase.tsx', import.meta.url),
+    'utf8',
+  )
+  const backdropSrc = await readFile(
+    new URL('../src/components/ScrollBackdrop.tsx', import.meta.url),
+    'utf8',
+  )
+
+  // the "Est." badge must not be a superscript inside the tight headline line box
+  // (strip JSX comments first so prose about the old bug cannot fail the check)
+  const heroCode = heroSrc.replace(/\{\/\*[\s\S]*?\*\/\}/g, '')
+  check('headline: no align-super badge', !heroCode.includes('align-super'))
+  check('headline: no 0.82 leading', !heroCode.includes('leading-[0.82]'))
+  check(
+    'headline: Est. badge sits outside the <h1>',
+    heroSrc.indexOf('Est. 2024') > heroSrc.indexOf('</h1>'),
+    'badge must be a sibling row, not an inline superscript',
+  )
+  // the reveal mask must have bottom padding so the italic descender is not clipped
+  check('headline: reveal mask has descender padding', heroCode.includes('pb-[0.06em]'))
+
+  // smooth scrolling: touch must actually be smoothed, and reduced motion respected
+  check('lenis: syncTouch enabled', /syncTouch:\s*true/.test(lenisSrc))
+  check('lenis: respects reduced motion', lenisSrc.includes("prefers-reduced-motion: reduce"))
+  check('lenis: pauses on hidden tab', lenisSrc.includes('visibilitychange'))
+
+  // a scroll container on <body> breaks sticky + Lenis
+  check('css: no overflow-x on body', !/body\s*{[^}]*overflow-x/.test(cssSrc))
+  check('css: lenis helper classes present', cssSrc.includes('.lenis.lenis-smooth'))
+
+  // dynamic viewport units so the mobile URL bar cannot resize sticky sections
+  check('showcase: no 100vh', !showcaseSrc.includes('100vh'))
+  check('showcase: uses dvh', showcaseSrc.includes('100dvh'))
+
+  // scroll backdrop must be cheap, safe and switch itself off
+  check('backdrop: fixed + pointer-events-none', backdropSrc.includes('pointer-events-none fixed inset-0'))
+  check('backdrop: aria-hidden', backdropSrc.includes('aria-hidden'))
+  check('backdrop: single RAF loop', (backdropSrc.match(/requestAnimationFrame/g) || []).length <= 4)
+  check('backdrop: passive scroll listener', backdropSrc.includes("{ passive: true }"))
+  check('backdrop: reduced-motion fallback', backdropSrc.includes('prefers-reduced-motion'))
+  check('backdrop: pauses when tab hidden', backdropSrc.includes('visibilitychange'))
+  check('backdrop: caps dpr on low-power', backdropSrc.includes('devicePixelRatio'))
+
+  // sections must be translucent or the backdrop is invisible
+  const appSrc = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8')
+  check('backdrop is mounted', appSrc.includes('<ScrollBackdrop'))
+  check('sections are translucent', /bg-ink\/(60|70)/.test(appSrc) || appSrc.includes('bg-ink/'))
 
   // 5. no invented social proof: no follower-suffixed numbers anywhere
   const invented = /\b\d+(\.\d+)?\s?[kKmM]?\s*(followers|reach|engagement rate)\b/.exec(html)

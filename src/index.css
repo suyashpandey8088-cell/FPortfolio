@@ -21,6 +21,21 @@
 html {
   background: var(--ink);
   scroll-behavior: auto;
+  /* clamp stray horizontal overflow on <html> only — putting overflow-x on
+     <body> turns it into a scroll container and breaks sticky + smooth scroll */
+  overflow-x: clip;
+}
+
+/* Lenis drives the scroll; tell the browser not to also anchor-smooth it */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
 }
 
 body {
@@ -29,7 +44,6 @@ body {
   color: var(--bone);
   font-family: 'Inter Tight', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
 }
 
 ::selection {
