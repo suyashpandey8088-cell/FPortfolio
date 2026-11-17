@@ -141,7 +141,7 @@ try {
     'utf8',
   )
   const backdropSrc = await readFile(
-    new URL('../src/components/ScrollBackdrop.tsx', import.meta.url),
+    new URL('../src/components/ScrollContinuum.tsx', import.meta.url),
     'utf8',
   )
 
@@ -197,7 +197,21 @@ try {
 
   // sections must be translucent or the backdrop is invisible
   const appSrc = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8')
-  check('backdrop is mounted', appSrc.includes('<ScrollBackdrop'))
+  check('continuum is mounted', appSrc.includes('<ScrollContinuum'))
+  check('continuum replaces the old backdrop', !appSrc.includes('<ScrollBackdrop'))
+  check('every chapter is tagged', (appSrc.match(/data-chapter=/g) || []).length >= 8)
+  check(
+    'continuum knows every chapter',
+    ['hero', 'intro', 'tunnel', 'padma', 'combat', 'close'].every((name) =>
+      backdropSrc.includes(`${name}:`),
+    ),
+  )
+  check('continuum has a chapter HUD', backdropSrc.includes('chapterRef'))
+  check('continuum interpolates between chapters', backdropSrc.includes('smoothstep'))
+  check('continuum reacts to scroll velocity', backdropSrc.includes('smoothVelocity'))
+  check('continuum contour field', backdropSrc.includes('createLinearGradient'))
+  check('continuum re-measures after fonts load', backdropSrc.includes('document.fonts'))
+  check('no section hides the world', !/className="[^"]*\bbg-ink\/(?!35)[0-9]+/.test(appSrc))
   check('sections are translucent', /bg-ink\/(60|70)/.test(appSrc) || appSrc.includes('bg-ink/'))
 
   // 5. no invented social proof: no follower-suffixed numbers anywhere

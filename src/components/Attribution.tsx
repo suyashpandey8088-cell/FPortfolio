@@ -9,7 +9,7 @@ export function Attribution() {
   return (
     <section
       id="attribution"
-      className="relative overflow-hidden border-b border-white/10 bg-charcoal/65 py-20 md:py-28"
+      className="relative overflow-hidden border-b border-white/10 bg-transparent py-20 md:py-28"
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,rgba(217,174,98,0.12),transparent_62%)]" />
       <div className="pointer-events-none absolute left-1/2 top-0 h-px w-[70%] -translate-x-1/2 bg-gradient-to-r from-transparent via-gold/50 to-transparent" />
@@ -132,7 +132,8 @@ export function Footer() {
   const { content } = useContent()
 
   return (
-    <footer className="relative overflow-hidden bg-ink/70 pb-10 pt-20">
+    <footer className="relative overflow-hidden bg-transparent pb-10 pt-20">
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-ink/35 to-ink/75" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-[radial-gradient(ellipse_at_50%_100%,rgba(217,174,98,0.18),transparent_65%)]" />
 
       <div className="relative mx-auto max-w-[1600px] px-6 md:px-10">

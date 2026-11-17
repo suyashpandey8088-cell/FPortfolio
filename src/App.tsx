@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion, useScroll, useSpring } from 'framer-motion'
-import ScrollBackdrop from './components/ScrollBackdrop'
+import ScrollContinuum from './components/ScrollContinuum'
 import Hero from './components/Hero'
 import IntroStatement from './components/IntroStatement'
 import AccountPanel from './components/AccountPanel'
@@ -36,8 +36,8 @@ export default function App() {
 
   return (
     <main className="noise relative min-h-screen">
-      {/* scroll-driven atmosphere sits behind every section */}
-      <ScrollBackdrop />
+      {/* one continuous scroll world behind every chapter */}
+      <ScrollContinuum />
 
       {/* scroll progress */}
       <motion.div
@@ -71,25 +71,33 @@ export default function App() {
         </div>
       </div>
 
-      <Hero onOpenAccount={jump} />
-      <IntroStatement onOpenAccount={jump} />
-      <FeedTunnel onOpenAccount={jump} />
-      <HorizontalShowcase />
-      <MobileShowcase />
+      <div data-chapter="hero"><Hero onOpenAccount={jump} /></div>
+      <div data-chapter="intro"><IntroStatement onOpenAccount={jump} /></div>
+      <div data-chapter="tunnel"><FeedTunnel onOpenAccount={jump} /></div>
+      <div data-chapter="intro"><HorizontalShowcase /></div>
+      <div data-chapter="intro"><MobileShowcase /></div>
 
       {content.accounts.map((account) => (
         <div key={account.id}>
-          <AccountPanel account={account} />
-          <div className="relative border-b border-white/10 bg-ink/60 px-6 pb-8 md:px-10">
-            <div className="mx-auto max-w-[1600px]">
+          <div data-chapter={account.id}>
+            <AccountPanel account={account} />
+          </div>
+          <div
+            data-chapter={`${account.id}-study`}
+            className="relative border-b border-white/10 px-6 pb-8 md:px-10"
+          >
+            <div className="pointer-events-none absolute inset-0 bg-ink/35" />
+            <div className="relative mx-auto max-w-[1600px]">
               <CaseStudy account={account} />
             </div>
           </div>
         </div>
       ))}
 
-      <Attribution />
-      <Footer />
+      <div data-chapter="close">
+        <Attribution />
+        <Footer />
+      </div>
 
       <AnimatePresence>{<FullscreenViewer />}</AnimatePresence>
       <EditToolbar />

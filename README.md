@@ -118,6 +118,35 @@ npm run build && npx serve dist
 3. Export the content JSON from the data panel and paste it into
    `src/content/accounts.ts` so the content is permanent, not just in your browser.
 
+## The scroll continuum
+
+`src/components/ScrollContinuum.tsx` is the layer that makes the whole page one continuous
+experience. Every major section is tagged with `data-chapter`, and the continuum reads the page as
+an ordered sequence of chapters it moves through as you scroll:
+
+```
+hero → intro → tunnel → intro → intro → padma → padma-study → combat → combat-study → close
+```
+
+Each chapter declares a *world*: haze colours, dust tint, particle density, contour amplitude and
+drift speed. The continuum **interpolates between whichever two chapters are adjacent** (with
+`smoothstep`), so the world morphs rather than cuts. Three stacked layers:
+
+1. **haze** — three radial fields that slide and recolour as chapters pass
+2. **contour field** — warped gradient bands whose amplitude follows the chapter's mood
+3. **dust** — depth-parallax motes that **stretch with scroll velocity**, so a flick pulls them into
+   streaks and stopping lets them settle
+
+A persistent bottom-left **chapter HUD** names where you are and carries a progress hairline.
+
+Because the continuum is the stage, every section paints transparent — a single `bg-ink/35` wash on
+long-form study copy and a gradient scrim on the footer are the only local opacity, and two wash
+layers inside the continuum (vertical + vignette) guarantee text contrast at every world state.
+
+Engineering: one passive frame-throttled scroll read, one RAF loop, chapter bands measured only on
+layout change (plus once after fonts settle), reduced motion → static per-chapter gradient with no
+canvas, low-power/narrow → fewer motes and ~30fps, loop paused on `visibilitychange`.
+
 ## The Feed Tunnel (the set piece)
 
 `src/components/FeedTunnel.tsx` — a 360vh section that pins a full-viewport 3D stage. Scroll

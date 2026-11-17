@@ -175,7 +175,7 @@ export default function AccountPanel({ account }: { account: Account }) {
       id={`account-${account.id}`}
       ref={ref}
       className={`relative overflow-hidden border-b ${
-        isCombat ? 'border-white/10 bg-void/70' : 'border-white/10 bg-ink/70'
+        isCombat ? 'border-white/10 bg-transparent' : 'border-white/10 bg-transparent'
       }`}
     >
       {/* world-specific ambience */}
