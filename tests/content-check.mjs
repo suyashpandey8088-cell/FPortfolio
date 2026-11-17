@@ -113,6 +113,24 @@ try {
 
   }
 
+  // 4b. no image may be used twice across an account's grid, reels and cover
+  for (const account of accountsSeed) {
+    const used = [
+      account.avatar,
+      ...account.highlights.map((h) => h.image).filter(Boolean),
+      ...account.gallery.map((g) => g.image),
+      ...account.reels.map((r) => r.image),
+    ]
+    const seen = new Map()
+    used.forEach((path) => seen.set(path, (seen.get(path) || 0) + 1))
+    const duplicates = [...seen.entries()].filter(([, count]) => count > 1).map(([path]) => path)
+    check(
+      `[${account.username}] no repeated imagery`,
+      duplicates.length === 0,
+      duplicates.join(', '),
+    )
+  }
+
   // 5. no invented social proof: no follower-suffixed numbers anywhere
   const invented = /\b\d+(\.\d+)?\s?[kKmM]?\s*(followers|reach|engagement rate)\b/.exec(html)
   check('no invented follower/reach figures', !invented, invented ? invented[0] : '')
