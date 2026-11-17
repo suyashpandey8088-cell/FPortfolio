@@ -155,7 +155,7 @@ export default function Hero({ onOpenAccount }: { onOpenAccount: (id: string) =>
         </header>
 
         {/* body */}
-        <div className="mt-auto grid flex-1 grid-cols-1 items-end gap-10 pb-4 pt-16 lg:grid-cols-12 lg:gap-6">
+        <div className="mt-auto grid flex-1 grid-cols-1 items-end gap-10 pb-3 pt-10 md:pt-14 lg:grid-cols-12 lg:gap-6">
           <div className="lg:col-span-7 xl:col-span-7">
             <motion.p
               initial={{ opacity: 0, x: -16 }}
@@ -167,7 +167,7 @@ export default function Hero({ onOpenAccount }: { onOpenAccount: (id: string) =>
               <Editable path="hero.eyebrow" className="kicker text-gold/90" />
             </motion.p>
 
-            <h1 className="mt-5 font-sans text-[clamp(3.6rem,12.4vw,10.6rem)] font-[900] leading-[0.82] tracking-tightest text-bone">
+            <h1 className="mt-5 font-sans text-[clamp(3.1rem,10.6vw,8.9rem)] font-[900] leading-[0.82] tracking-tightest text-bone">
               <span className="block">
                 <SplitLines text="BEHIND" delay={0.25} />
               </span>
@@ -194,7 +194,7 @@ export default function Hero({ onOpenAccount }: { onOpenAccount: (id: string) =>
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 1, delay: 0.7 }}
-              className="mt-7 max-w-2xl"
+              className="mt-6 max-w-2xl"
             >
               <h2 className="text-[clamp(1.05rem,2.1vw,1.55rem)] font-semibold uppercase leading-[1.22] tracking-[0.02em] text-bone">
                 <Editable path="intro.headline" multiline as="span" className="block" />
@@ -208,7 +208,7 @@ export default function Hero({ onOpenAccount }: { onOpenAccount: (id: string) =>
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.9, delay: 0.9 }}
-              className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-3"
+              className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3"
             >
               <button
                 type="button"
