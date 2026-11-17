@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Instrument+Serif:ital@0;1&family=Inter+Tight:ital,wght@0,300..900;1,300..900&family=JetBrains+Mono:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@300..700&family=Syne:wght@400..800&family=Archivo+Black&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -12,6 +12,21 @@
   --bone: #f4efe6;
   --padma-bg: #0d0906;
   --combat-bg: #070708;
+
+  /* the chapter palette — each section reads --scene-* and cross-fades */
+  --flash: #ff4d0d;
+  --punch: #ff2e93;
+  --acid: #c8ff3d;
+  --cobalt: #1d4bff;
+  --grape: #3b1270;
+  --lilac: #cbb8ff;
+  --neon: #f5ff3d;
+  --forest: #0c3b2e;
+  --paper: #f7f1e4;
+
+  /* live scene background, driven by ScrollScenes */
+  --scene-bg: #0a0908;
+  --scene-fg: #f7f1e4;
 }
 
 * {
@@ -42,6 +57,7 @@ body {
   margin: 0;
   background: var(--ink);
   color: var(--bone);
+  transition: background-color 700ms cubic-bezier(0.22, 1, 0.36, 1);
   font-family: 'Inter Tight', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -90,8 +106,89 @@ body.combat-selected ::selection {
     background: linear-gradient(90deg, transparent, rgba(244, 239, 230, 0.16), transparent);
   }
 
+  /* ── maximalist helpers ─────────────────────────────────────────────── */
+
+  /* a scene is a viewport-tall block with its own colour identity */
+  .scene {
+    position: relative;
+    background: var(--scene-bg);
+    color: var(--scene-fg);
+    transition:
+      background-color 800ms cubic-bezier(0.22, 1, 0.36, 1),
+      color 800ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /* hard offset shadow — the house signature, used on type and objects */
+  .slab {
+    box-shadow: 6px 6px 0 currentColor;
+  }
+  .slab-sm {
+    box-shadow: 3px 3px 0 currentColor;
+  }
+
+  /* outline type, for giant background words */
+  .outline-type {
+    color: transparent;
+    -webkit-text-stroke: 1.5px currentColor;
+  }
+  .outline-type-thick {
+    color: transparent;
+    -webkit-text-stroke: 3px currentColor;
+  }
+
+  /* vertical running text */
+  .vertical-rl {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+  }
+
+  /* halftone dots, one of the texture primitives */
+  .halftone {
+    background-image: radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0);
+    background-size: 7px 7px;
+  }
+
+  /* graph paper */
+  .graph-paper {
+    background-image:
+      linear-gradient(currentColor 1px, transparent 1px),
+      linear-gradient(90deg, currentColor 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* diagonal hazard stripes */
+  .stripes {
+    background-image: repeating-linear-gradient(
+      -45deg,
+      currentColor 0 2px,
+      transparent 2px 12px
+    );
+  }
+
+  /* animated underline that draws on hover */
+  .draw-line::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -0.08em;
+    height: 0.06em;
+    width: 100%;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .draw-line:hover::after {
+    transform: scaleX(1);
+  }
+
+  /* mask reveal — image slides up out of a clipped frame */
+  .reveal-frame {
+    clip-path: inset(0 0 0 0);
+  }
+
   .kicker {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'DM Mono', 'JetBrains Mono', monospace;
     font-size: 0.6rem;
     letter-spacing: 0.34em;
     text-transform: uppercase;

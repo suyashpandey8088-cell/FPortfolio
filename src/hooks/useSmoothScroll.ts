@@ -1,7 +1,24 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Lenis from 'lenis'
 
 let instance: Lenis | null = null
+
+type Listener = (lenis: Lenis | null) => void
+const listeners = new Set<Listener>()
+
+/** React-facing hook: the live Lenis instance, or null while it boots. */
+export function useLenis() {
+  const [lenis, setLenis] = useState<Lenis | null>(() => instance)
+  useEffect(() => {
+    const listener: Listener = (next) => setLenis(next)
+    listeners.add(listener)
+    listener(instance)
+    return () => {
+      listeners.delete(listener)
+    }
+  }, [])
+  return lenis
+}
 
 /** Respect the OS reduced-motion setting — no inertia smoothing at all. */
 function prefersReducedMotion() {
@@ -45,6 +62,8 @@ export function useSmoothScroll() {
 
     ref.current = lenis
     instance = lenis
+    // notify subscribers (ScrollTrigger sync) that Lenis now owns the scroll
+    listeners.forEach((listener) => listener(lenis))
 
     let frame = 0
     let running = true
@@ -84,6 +103,7 @@ export function useSmoothScroll() {
       lenis.destroy()
       ref.current = null
       instance = null
+      listeners.forEach((listener) => listener(null))
     }
   }, [])
 
