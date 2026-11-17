@@ -70,7 +70,7 @@ export default function Hero({ onOpenAccount }: { onOpenAccount: (id: string) =>
   return (
     <section
       id="top"
-      className="relative min-h-[100svh] w-full overflow-hidden border-b border-white/10"
+      className="relative min-h-[100svh] w-full overflow-hidden border-b border-white/10 bg-ink/40"
       onPointerMove={(event) => {
         const { innerWidth, innerHeight } = window
         setPointer({ x: event.clientX / innerWidth - 0.5, y: event.clientY / innerHeight - 0.5 })
@@ -167,28 +167,44 @@ export default function Hero({ onOpenAccount }: { onOpenAccount: (id: string) =>
               <Editable path="hero.eyebrow" className="kicker text-gold/90" />
             </motion.p>
 
-            <h1 className="mt-5 font-sans text-[clamp(3.1rem,10.6vw,8.9rem)] font-[900] leading-[0.82] tracking-tightest text-bone">
+            {/* Two stacked line boxes at a safe leading. The "Est." badge lives
+                OUTSIDE the <h1> in its own row, so it can never collide with
+                "BEHIND" at any viewport — the old align-super badge sat inside a
+                0.82em line box and overran the line above by up to 135px. */}
+            <h1 className="mt-5 font-sans text-[clamp(3.1rem,10.6vw,8.9rem)] font-[900] leading-[0.86] tracking-tightest text-bone">
               <span className="block">
                 <SplitLines text="BEHIND" delay={0.25} />
               </span>
-              <span className="block">
-                <span className="inline-block overflow-hidden">
+              <span className="block whitespace-nowrap">
+                <span className="inline-block overflow-hidden pb-[0.06em] align-bottom">
                   <motion.span
                     initial={{ y: '110%' }}
                     animate={{ y: '0%' }}
                     transition={{ duration: 1.15, delay: 0.34, ease: EASE }}
-                    className="inline-flex items-baseline gap-[0.12em]"
+                    className="inline-flex items-baseline gap-[0.1em]"
                   >
                     <span>THE</span>
                     <span className="font-serif font-normal italic text-gold">Feed</span>
-                    <span className="ml-2 align-super font-mono text-[0.16em] font-normal not-italic text-bone/35">
-                      Est. 2024
-                    </span>
+                    <span className="text-gold">.</span>
                   </motion.span>
                 </span>
-                <span className="text-gold">.</span>
               </span>
             </h1>
+
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.6, ease: EASE }}
+              className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5"
+            >
+              <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-bone/40">
+                Est. 2024
+              </span>
+              <span className="hidden h-px w-8 bg-bone/20 sm:block" />
+              <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-bone/25">
+                Two accounts · managed end to end
+              </span>
+            </motion.div>
 
             <motion.div
               initial={{ opacity: 0 }}

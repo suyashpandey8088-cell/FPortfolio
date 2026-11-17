@@ -8,6 +8,9 @@ export default {
         bone: '#F4EFE6',
         gold: { DEFAULT: '#D9AE62', soft: '#EFD7A6', deep: '#8A6A2F' },
         signal: '#FF3A21',
+        ash: '#0a0908',
+        void: '#08080a',
+        charcoal: '#0a0a09',
         steel: '#8E939B',
       },
       fontFamily: {

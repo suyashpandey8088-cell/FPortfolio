@@ -80,17 +80,25 @@ export default function HorizontalShowcase() {
   )
 
   useEffect(() => {
+    let lastWidth = -1
     const measure = () => {
       const width = trackRef.current?.scrollWidth ?? 0
-      setDistance(Math.max(0, width - window.innerWidth + 80))
+      const next = Math.max(0, width - window.innerWidth + 80)
+      // avoid churn: only update when the usable width actually changed, so the
+      // mobile URL bar collapsing does not trigger a reflow every frame
+      if (width === lastWidth) return
+      lastWidth = width
+      setDistance(next)
     }
     measure()
     const observer = new ResizeObserver(measure)
     if (trackRef.current) observer.observe(trackRef.current)
     window.addEventListener('resize', measure)
+    window.addEventListener('orientationchange', measure)
     return () => {
       observer.disconnect()
       window.removeEventListener('resize', measure)
+      window.removeEventListener('orientationchange', measure)
     }
   }, [cards.length])
 
@@ -103,10 +111,10 @@ export default function HorizontalShowcase() {
     <section
       ref={sectionRef}
       id="showcase"
-      className="relative hidden border-b border-white/10 bg-[#0a0908] md:block"
-      style={{ height: `calc(100vh + ${distance}px)` }}
+      className="relative hidden border-b border-white/10 bg-ash/65 md:block"
+      style={{ height: `calc(100dvh + ${distance}px)` }}
     >
-      <div className="sticky top-0 flex h-screen flex-col justify-center overflow-hidden">
+      <div className="sticky top-0 flex h-[100dvh] flex-col justify-center overflow-hidden">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_-10%,rgba(217,174,98,0.10),transparent_58%)]" />
 
         <div className="relative mx-auto flex w-full max-w-[1600px] items-end justify-between px-6 pb-6 md:px-10">
@@ -178,7 +186,7 @@ export function MobileShowcase() {
   )
 
   return (
-    <section className="border-b border-white/10 bg-[#0a0908] py-12 md:hidden">
+    <section className="border-b border-white/10 bg-ash/65 py-12 md:hidden">
       <div className="px-6">
         <p className="kicker flex items-center gap-3 text-bone/35">
           <span className="h-1 w-1 rounded-full bg-gold" />
