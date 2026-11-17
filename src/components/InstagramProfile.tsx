@@ -309,19 +309,45 @@ export default function InstagramProfile({
               }
               className="group flex shrink-0 flex-col items-center gap-1.5"
             >
-              <span className="rounded-full border border-white/20 p-[2px] transition-colors group-hover:border-white/60">
-                <EditableImage
-                  path={`${base}.highlights.${index}.image`}
-                  src={highlight.image}
-                  alt={`${highlight.label} highlight`}
-                  className="h-[50px] w-[50px] rounded-full"
-                  imgClassName="transition-transform duration-700 group-hover:scale-110"
-                />
-              </span>
+              {/* typographic cover — how real highlight covers are built, and it
+                  keeps photographic variety for the feed and reels */}
+              {highlight.image ? (
+                <span className="rounded-full border border-white/20 p-[2px] transition-colors group-hover:border-white/60">
+                  <EditableImage
+                    path={`${base}.highlights.${index}.image`}
+                    src={highlight.image}
+                    alt={`${highlight.label} highlight`}
+                    className="h-[52px] w-[52px] rounded-full"
+                    imgClassName="transition-transform duration-700 group-hover:scale-110"
+                  />
+                </span>
+              ) : (
+                <span
+                  className={`relative grid h-[56px] w-[56px] place-items-center rounded-full border p-[2px] transition-colors group-hover:border-white/60 ${
+                    isCombat ? 'border-signal/30' : 'border-gold/30'
+                  }`}
+                >
+                  <span
+                    className={`grid h-full w-full place-items-center rounded-full border ${
+                      isCombat
+                        ? 'border-white/10 bg-[radial-gradient(circle_at_30%_20%,rgba(255,58,33,0.30),#140505)]'
+                        : 'border-white/10 bg-[radial-gradient(circle_at_30%_20%,rgba(217,174,98,0.32),#151007)]'
+                    }`}
+                  >
+                    <span
+                      className={`px-1 text-center font-mono text-[7px] uppercase leading-[1.35] tracking-[0.1em] ${
+                        isCombat ? 'text-signal/90' : 'text-gold/90'
+                      }`}
+                    >
+                      {highlight.label.split(' ')[0]}
+                    </span>
+                  </span>
+                </span>
+              )}
               <Editable
                 path={`${base}.highlights.${index}.label`}
                 as="span"
-                className="max-w-[58px] truncate text-center text-[10px] text-white/75"
+                className="max-w-[62px] truncate text-center text-[10px] text-white/75"
               />
             </button>
           ))}
@@ -334,7 +360,7 @@ export default function InstagramProfile({
                   {
                     id: `h-${Date.now()}`,
                     label: 'New',
-                    image: account.highlights[0]?.image ?? account.avatar,
+                    image: undefined,
                   },
                 ]
                 set(`${base}.highlights`, next)
