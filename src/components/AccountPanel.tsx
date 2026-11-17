@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import type { Account } from '../content/accounts'
-import { useContent, type ViewerItem } from '../store/content'
+import { accountBase, useContent, type ViewerItem } from '../store/content'
 import { Editable, EditableList, Reveal } from './primitives'
 import InstagramProfile, { IgIcon } from './InstagramProfile'
 
@@ -96,9 +96,12 @@ function ReelRail({ account }: { account: Account }) {
               src={reel.image}
               alt={reel.title}
               loading="lazy"
-              className="h-full w-full object-cover opacity-80 transition-all duration-[1.3s] ease-swift group-hover:scale-[1.08] group-hover:opacity-100"
+              className="reel-kb h-full w-full object-cover opacity-80 transition-opacity duration-500 group-hover:opacity-100"
             />
             <span className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-black/30" />
+            <span className="absolute inset-x-0 top-0 z-10 h-[2px] overflow-hidden bg-white/10">
+              <span className={`reel-sweep block h-full ${isCombat ? 'bg-signal' : 'bg-gold'}`} />
+            </span>
             <span className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-black/45 px-1.5 py-0.5 backdrop-blur-sm">
               <IgIcon name="play" className="h-2 w-2 text-white" />
               <span className="font-mono text-[7px] uppercase tracking-[0.16em] text-white/80">Reel</span>
@@ -113,7 +116,7 @@ function ReelRail({ account }: { account: Account }) {
               </span>
             </span>
             <span className="absolute inset-x-0 bottom-0 p-2.5 text-left">
-              <span className="block text-[10px] font-semibold leading-tight text-white">{reel.title}</span>
+              <span className="block text-[11px] font-semibold leading-tight text-white">{reel.title}</span>
               <span className="mt-0.5 block truncate font-mono text-[7.5px] uppercase tracking-[0.1em] text-white/45">
                 {account.username}
               </span>
@@ -160,8 +163,9 @@ function ResponsibilityStrip({ account }: { account: Account }) {
 /* ── main panel ───────────────────────────────────────────────────────────── */
 
 export default function AccountPanel({ account }: { account: Account }) {
+  const { content } = useContent()
   const isCombat = account.id === 'combat'
-  const base = `accounts.${account.id}`
+  const base = accountBase(content.accounts, account.id)
   const ref = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] })
   const drift = useTransform(scrollYProgress, [0, 1], ['-3%', '3%'])
@@ -425,8 +429,8 @@ function GalleryGrid({ account }: { account: Account }) {
             <span className="font-mono text-[7px] uppercase tracking-[0.16em] text-white/75">{item.type}</span>
           </span>
           <span className="absolute inset-x-0 bottom-0 translate-y-3 p-2.5 text-left opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
-            <span className="block text-[10.5px] font-semibold leading-tight text-white">{item.title}</span>
-            <span className="mt-1 line-clamp-2 block text-[9px] leading-snug text-white/60">{item.caption}</span>
+            <span className="block text-[11.5px] font-semibold leading-tight text-white">{item.title}</span>
+            <span className="mt-1 line-clamp-2 block text-[10px] leading-snug text-white/65">{item.caption}</span>
           </span>
         </motion.button>
       ))}

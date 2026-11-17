@@ -134,25 +134,34 @@ export default function FullscreenViewer() {
                     <p className="mt-3 font-mono text-[9.5px] leading-relaxed text-white/30">{item.tags}</p>
                   )}
                   <div className="mt-5 border-t border-white/10 pt-4">
-                    <div className="flex items-center gap-4 text-white/45">
-                      <span className="flex items-center gap-1.5">
-                        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.6">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                      <span className="flex items-center gap-1.5 text-white/40">
+                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.6">
                           <path d="M12 20s-7-4.4-7-9.3A4.1 4.1 0 0 1 12 7.8a4.1 4.1 0 0 1 7 2.9c0 4.9-7 9.3-7 9.3Z" />
                         </svg>
-                        <span className="font-mono text-[9px]">—</span>
+                        <span className="font-mono text-[8px] uppercase tracking-[0.14em]">Likes</span>
                       </span>
-                      <span className="flex items-center gap-1.5">
-                        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.6">
+                      <span className="flex items-center gap-1.5 text-white/40">
+                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.6">
                           <path d="M21 12a8.5 8.5 0 0 1-12.5 7.5L3 21l1.5-5.4A8.5 8.5 0 1 1 21 12Z" />
                         </svg>
-                        <span className="font-mono text-[9px]">—</span>
+                        <span className="font-mono text-[8px] uppercase tracking-[0.14em]">Comments</span>
                       </span>
-                      <svg viewBox="0 0 24 24" className="ml-auto h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.6">
-                        <path d="M6 3h12v18l-6-4.5L6 21z" />
-                      </svg>
+                      <span className="flex items-center gap-1.5 text-white/40">
+                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.6">
+                          <path d="M21 3 10.5 13.5M21 3l-6.5 18-4-8-8-4z" />
+                        </svg>
+                        <span className="font-mono text-[8px] uppercase tracking-[0.14em]">Share</span>
+                      </span>
+                      <span className="ml-auto flex items-center gap-1.5 text-white/40">
+                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.6">
+                          <path d="M6 3h12v18l-6-4.5L6 21z" />
+                        </svg>
+                        <span className="font-mono text-[8px] uppercase tracking-[0.14em]">Save</span>
+                      </span>
                     </div>
-                    <p className="mt-2 font-mono text-[7.5px] uppercase tracking-[0.16em] text-white/25">
-                      Engagement figures withheld until verified
+                    <p className="mt-2.5 font-mono text-[7.5px] uppercase tracking-[0.16em] text-white/25">
+                      Live engagement is on the Instagram post itself
                     </p>
                   </div>
                 </motion.div>

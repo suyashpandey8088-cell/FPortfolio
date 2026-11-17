@@ -44,7 +44,14 @@ that Deleena Venkatesh personally manages.
 
 ## Everything is editable
 
-A floating toolbar (bottom right) turns the page into an editing surface:
+The editor is **hidden from visitors** and only appears when you add `?edit=1` to the URL,
+so the published page never shows an editing control or an empty field.
+
+```text
+https://your-site.com/?edit=1
+```
+
+A floating toolbar (bottom right) then turns the page into an editing surface:
 
 - **Edit content** — click any dashed field (headline, bio, caption, image path, link,
   metric, description, responsibility) and type. Changes save to `localStorage` in the
@@ -58,9 +65,10 @@ To make edits permanent for every visitor, export the JSON and paste the values 
 ### Metric policy
 
 No follower count, engagement rate, reach figure or business-growth number is invented
-anywhere in this project. Every numeric field ships as `—` with its source labelled
-(Instagram Insights) so a verified value can be dropped in from edit mode. The UI states
-this explicitly in the metrics chapter.
+anywhere in this project. Unverified metrics are **hidden from the published page** — the
+profile stats row shows the management credit instead of empty dashes, and the metrics
+chapter lists the metric names it will report rather than displaying placeholder values.
+Drop a verified figure in via `?edit=1` and it appears immediately.
 
 ### Imagery
 
@@ -76,7 +84,39 @@ npm install
 npm run dev      # http://localhost:5173
 npm run build    # type-check + production build
 npm run preview
+npm run check    # type-check + content integrity test
+npm test         # content integrity test only
 ```
+
+## Content integrity test
+
+`tests/content-check.mjs` renders the whole app server-side and asserts 270 conditions,
+including that **no editing placeholder text reaches the page**, that every account's
+name, username, bio, gallery, reels and all seven case-study chapters actually render,
+that the seed has no blank fields, and that no invented follower/reach figure exists.
+
+It exists because an earlier build shipped with editable paths written as
+`accounts.padma.name` while the content is stored as an array (`accounts[0].name`), so
+every account-level field silently fell back to the editor's placeholder. Paths are now
+resolved through `accountBase()` in `src/store/content.tsx`.
+
+## Deploy
+
+The repo ships `vercel.json` (Vite framework preset, SPA rewrite, immutable asset
+caching). On Vercel: import the repo, keep the detected settings, deploy. Locally:
+
+```bash
+npm run build && npx serve dist
+```
+
+## Before you show it to a client
+
+1. Replace the representative imagery with the accounts' real posts (image paths are
+   editable in `?edit=1`).
+2. Add verified follower / reach / engagement figures, or leave them out — the page looks
+   complete either way.
+3. Export the content JSON from the data panel and paste it into
+   `src/content/accounts.ts` so the content is permanent, not just in your browser.
 
 ## Stack
 

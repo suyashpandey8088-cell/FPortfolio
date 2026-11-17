@@ -265,3 +265,55 @@ body.combat-selected ::selection {
   outline: 1px solid var(--gold);
   outline-offset: 3px;
 }
+
+/* ── reel previews: a slow ken-burns drift reads as motion without video ───── */
+@keyframes kenburns {
+  0% {
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+  50% {
+    transform: scale(1.07) translate3d(0, -1.5%, 0);
+  }
+  100% {
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+}
+
+.reel-kb {
+  animation: kenburns 12s ease-in-out infinite;
+  will-change: transform;
+}
+
+.group:hover .reel-kb {
+  animation-duration: 6s;
+}
+
+/* a progress hairline that sweeps while the reel tile is hovered */
+@keyframes reel-sweep {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.reel-sweep {
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+.group:hover .reel-sweep {
+  animation: reel-sweep 4.5s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reel-kb,
+  .group:hover .reel-kb,
+  .group:hover .reel-sweep {
+    animation: none !important;
+  }
+  .reel-sweep {
+    transform: scaleX(1);
+  }
+}

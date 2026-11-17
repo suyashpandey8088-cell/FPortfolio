@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { useState } from 'react'
-import { useContent, type ViewerItem } from '../store/content'
+import { accountBase, useContent, type ViewerItem } from '../store/content'
 import type { Account } from '../content/accounts'
 import { Editable, EditableImage, Reveal } from './primitives'
 
@@ -96,13 +96,16 @@ export default function InstagramProfile({
   account: Account
   variant: 'padma' | 'combat'
 }) {
-  const { openViewer, editing, set } = useContent()
+  const { content, openViewer, editing, set } = useContent()
   const [tab, setTab] = useState<'posts' | 'reels'>('posts')
-  const base = `accounts.${account.id}`
+  const base = accountBase(content.accounts, account.id)
   const isCombat = variant === 'combat'
   const accentText = isCombat ? 'text-signal' : 'text-gold'
   const accentBg = isCombat ? 'bg-signal' : 'bg-gold'
   const ring = isCombat ? 'combat-ring' : 'padma-ring'
+
+  const hasValue = (value: string) => Boolean(value && value.trim() && value.trim() !== '—')
+  const showStats = editing || Object.values(account.stats).some(hasValue)
 
   const posts = account.gallery
   const viewerItems: ViewerItem[] = posts.map((item) => ({
@@ -171,24 +174,48 @@ export default function InstagramProfile({
             </span>
           </div>
 
-          {/* stats */}
-          <div className="flex flex-1 items-start justify-around gap-2 pt-1">
-            {[
-              { key: 'posts', label: 'posts' },
-              { key: 'followers', label: 'followers' },
-              { key: 'following', label: 'following' },
-            ].map((stat) => (
-              <div key={stat.key} className="text-center">
-                <Editable
-                  path={`${base}.stats.${stat.key}`}
-                  as="p"
-                  className="tabnum text-[15px] font-semibold leading-none text-white"
-                  ariaLabel={`${account.name} ${stat.label}`}
-                />
-                <p className="mt-1 font-mono text-[9px] uppercase tracking-[0.12em] text-white/45">{stat.label}</p>
-              </div>
-            ))}
-          </div>
+          {/* stats — only rendered once real counts exist, so a published profile
+              never shows empty dashes. Edit mode always shows the fields. */}
+          {showStats ? (
+            <div className="flex flex-1 items-start justify-around gap-2 pt-1">
+              {[
+                { key: 'posts', label: 'posts' },
+                { key: 'followers', label: 'followers' },
+                { key: 'following', label: 'following' },
+              ]
+                .filter((stat) => editing || hasValue((account.stats as any)[stat.key]))
+                .map((stat) => (
+                  <div key={stat.key} className="text-center">
+                    <Editable
+                      path={`${base}.stats.${stat.key}`}
+                      as="p"
+                      className="tabnum text-[15px] font-semibold leading-none text-white"
+                      ariaLabel={`${account.name} ${stat.label}`}
+                    />
+                    <p className="mt-1 font-mono text-[9px] uppercase tracking-[0.12em] text-white/50">
+                      {stat.label}
+                    </p>
+                  </div>
+                ))}
+            </div>
+          ) : (
+            <div className="flex flex-1 flex-col justify-center gap-1.5 pt-1">
+              <p
+                className={`font-mono text-[7.5px] uppercase tracking-[0.2em] ${
+                  isCombat ? 'text-signal/80' : 'text-gold/80'
+                }`}
+              >
+                Personally managed
+              </p>
+              <p className="text-[12px] leading-snug text-white/60">
+                Content, captions, scheduling and community — run end to end by Deleena
+                Venkatesh.
+              </p>
+              <p className="font-mono text-[7.5px] uppercase tracking-[0.16em] text-white/25">
+                Live counts on Instagram
+              </p>
+            </div>
+          )}
         </div>
 
         {/* identity */}
@@ -206,14 +233,14 @@ export default function InstagramProfile({
                 isCombat ? 'border-signal/40 text-signal/90' : 'border-gold/40 text-gold/90'
               }`}
             >
-              {account.category.split('·')[0].trim()}
+              {account.category}
             </span>
           </div>
           <Editable
             path={`${base}.bio`}
             as="p"
             multiline
-            className="mt-2 text-[11.5px] leading-[1.55] text-white/65"
+            className="mt-2 text-[12px] leading-[1.6] text-white/70"
           />
           <a
             href={account.url}
@@ -294,7 +321,7 @@ export default function InstagramProfile({
               <Editable
                 path={`${base}.highlights.${index}.label`}
                 as="span"
-                className="max-w-[58px] truncate text-center text-[9.5px] text-white/70"
+                className="max-w-[58px] truncate text-center text-[10px] text-white/75"
               />
             </button>
           ))}

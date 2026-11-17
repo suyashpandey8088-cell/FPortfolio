@@ -106,6 +106,17 @@ export function Attribution() {
                     Imagery on this page is representative of each account’s visual direction. Live posts, counts and
                     engagement should always be read on Instagram itself.
                   </p>
+                  <p className="mt-2 font-mono text-[8px] leading-relaxed tracking-[0.12em] text-bone/25">
+                    Placeholder photography:{' '}
+                    <a
+                      href="https://unsplash.com/license"
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="underline decoration-bone/20 underline-offset-2 hover:text-bone/50"
+                    >
+                      Unsplash License
+                    </a>
+                  </p>
                 </div>
               </div>
             </Reveal>
