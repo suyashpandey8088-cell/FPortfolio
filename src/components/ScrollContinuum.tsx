@@ -1,83 +1,102 @@
 import { useEffect, useRef } from 'react'
 
 /**
- * ScrollContinuum — one immersive layer that carries the whole page.
+ * ScrollContinuum — the page's world. Expressive edition.
  *
- * Unlike a per-section background, this is a single fixed stage that reads the
- * page as a sequence of chapters (marked with `data-chapter`) and continuously
- * morp(h)s its world between them:
+ * Reads the page as an ordered sequence of chapters (`data-chapter`), each of
+ * which owns a *mood*: a brand colour, a hue wash, contour energy and dust
+ * character. Between chapters the world interpolates continuously, and every
+ * chapter boundary fires a one-shot *event* — a horizon bloom, a contour snap
+ * and a dust burst — so crossing a section is something you feel.
  *
- *   hero → intro → tunnel → padma → study → combat → study → close
+ * Layers, back to front:
+ *   1. aura     — two huge drifting colour fields (brand committed)
+ *   2. contour  — warped bands + mirrored ghost, whip hard on velocity
+ *   3. far dust — sparse specks, parallax
+ *   4. bokeh    — near-field blurred orbs, real foreground depth
+ *   5. horizon  — glowing seam that flares at chapter boundaries
  *
- * Three layers, all driven by one scroll sample:
- *   1. haze   — three radial fields that slide + recolour as chapters pass
- *   2. contour — warped horizontal bands, amplitude tied to the chapter mood
- *   3. dust    — depth-parallax motes that stretch with scroll *velocity*
- *
- * Engineering notes:
- *   - one passive, frame-throttled scroll read; one RAF loop
- *   - chapter bands are measured once per layout change, never per frame
- *   - the world state is temporally smoothed, so chapter changes never cut
- *   - reduced motion → a static chapter gradient, no canvas at all
- *   - low-power/narrow devices → fewer motes, capped DPR, ~30fps
- *   - the loop pauses on visibilitychange
+ * Engineering: one passive frame-throttled scroll read, one RAF loop, chapter
+ * bands measured on layout change only (+ once after fonts settle), reduced
+ * motion → static per-chapter gradient with no canvas, low-power → far fewer
+ * particles at ~30fps, loop paused on visibilitychange.
  */
 
 type Dust = 'gold' | 'signal' | 'steel' | 'mixed'
 
-type World = {
+type Mood = {
+  /** brand hue that leads the chapter */
+  key: string
+  /** secondary hue pulled alongside it */
+  alt: string
   a: string
   b: string
   c: string
   dust: Dust
-  /** mote count multiplier 0..1 */
   density: number
-  /** contour amplitude multiplier 0..1 */
   contour: number
-  /** drift speed multiplier */
   speed: number
   label: string
+  /** 0..1 — how strongly this chapter commits to its colour */
+  commit: number
 }
 
-const WORLDS: Record<string, World> = {
+const MOODS: Record<string, Mood> = {
   hero: {
-    a: 'rgba(217,174,98,0.20)', b: 'rgba(120,92,41,0.16)', c: 'rgba(255,236,200,0.05)',
-    dust: 'gold', density: 0.45, contour: 0.35, speed: 0.6, label: 'Opening',
+    key: '236,196,124', alt: '150,110,52',
+    a: 'rgba(236,196,124,0.42)', b: 'rgba(150,110,52,0.30)', c: 'rgba(255,240,214,0.12)',
+    dust: 'gold', density: 0.5, contour: 0.4, speed: 0.6, label: 'Opening', commit: 0.55,
   },
   intro: {
-    a: 'rgba(226,186,112,0.20)', b: 'rgba(138,106,47,0.17)', c: 'rgba(255,226,176,0.06)',
-    dust: 'gold', density: 0.6, contour: 0.5, speed: 0.7, label: 'The work',
+    key: '244,204,132', alt: '166,124,58',
+    a: 'rgba(244,204,132,0.44)', b: 'rgba(166,124,58,0.32)', c: 'rgba(255,232,190,0.13)',
+    dust: 'gold', density: 0.66, contour: 0.58, speed: 0.72, label: 'The work', commit: 0.6,
   },
   tunnel: {
-    a: 'rgba(240,164,72,0.22)', b: 'rgba(255,58,33,0.16)', c: 'rgba(255,214,150,0.07)',
-    dust: 'mixed', density: 0.95, contour: 0.8, speed: 1.25, label: 'The tunnel',
+    key: '255,158,64', alt: '255,58,33',
+    a: 'rgba(255,158,64,0.5)', b: 'rgba(255,58,33,0.34)', c: 'rgba(255,220,168,0.15)',
+    dust: 'mixed', density: 1, contour: 0.92, speed: 1.3, label: 'The tunnel', commit: 0.9,
   },
   padma: {
-    a: 'rgba(206,158,74,0.19)', b: 'rgba(94,66,26,0.16)', c: 'rgba(255,214,150,0.06)',
-    dust: 'gold', density: 0.7, contour: 0.45, speed: 0.6, label: 'Padma Jewels',
+    key: '232,178,86', alt: '120,84,30',
+    a: 'rgba(232,178,86,0.54)', b: 'rgba(120,84,30,0.34)', c: 'rgba(255,226,170,0.16)',
+    dust: 'gold', density: 0.78, contour: 0.55, speed: 0.62, label: 'Padma Jewels', commit: 0.92,
   },
   'padma-study': {
-    a: 'rgba(180,146,94,0.13)', b: 'rgba(74,58,34,0.14)', c: 'rgba(236,220,190,0.05)',
-    dust: 'gold', density: 0.38, contour: 0.32, speed: 0.4, label: 'Padma — case study',
+    key: '206,166,104', alt: '96,74,42',
+    a: 'rgba(206,166,104,0.34)', b: 'rgba(96,74,42,0.26)', c: 'rgba(244,228,198,0.10)',
+    dust: 'gold', density: 0.44, contour: 0.36, speed: 0.42, label: 'Padma — case study', commit: 0.68,
   },
   combat: {
-    a: 'rgba(255,58,33,0.18)', b: 'rgba(90,15,6,0.18)', c: 'rgba(255,140,110,0.06)',
-    dust: 'signal', density: 0.85, contour: 0.6, speed: 1.1, label: 'Combat Crew 25',
+    key: '255,58,33', alt: '120,18,8',
+    a: 'rgba(255,58,33,0.5)', b: 'rgba(120,18,8,0.4)', c: 'rgba(255,152,120,0.15)',
+    dust: 'signal', density: 0.92, contour: 0.72, speed: 1.15, label: 'Combat Crew 25', commit: 0.95,
   },
   'combat-study': {
-    a: 'rgba(150,96,86,0.13)', b: 'rgba(52,30,28,0.16)', c: 'rgba(220,208,204,0.05)',
-    dust: 'signal', density: 0.38, contour: 0.3, speed: 0.4, label: 'Combat — case study',
+    key: '214,110,88', alt: '74,34,30',
+    a: 'rgba(214,110,88,0.34)', b: 'rgba(74,34,30,0.28)', c: 'rgba(236,222,218,0.10)',
+    dust: 'signal', density: 0.44, contour: 0.34, speed: 0.42, label: 'Combat — case study', commit: 0.7,
   },
   close: {
-    a: 'rgba(142,147,155,0.11)', b: 'rgba(60,50,32,0.15)', c: 'rgba(217,174,98,0.05)',
-    dust: 'steel', density: 0.3, contour: 0.25, speed: 0.35, label: 'Closing',
+    key: '178,186,200', alt: '86,74,54',
+    a: 'rgba(178,186,200,0.28)', b: 'rgba(86,74,54,0.24)', c: 'rgba(226,206,160,0.10)',
+    dust: 'steel', density: 0.34, contour: 0.3, speed: 0.36, label: 'Closing', commit: 0.45,
   },
 }
 
-const FALLBACK = WORLDS.close
+const FALLBACK = MOODS.close
 
-function worldFor(name: string): World {
-  return WORLDS[name] ?? FALLBACK
+function moodFor(name: string): Mood {
+  return MOODS[name] ?? FALLBACK
+}
+
+const rgb = (value: string) => value.split(',').map((n) => parseFloat(n.trim()))
+
+function mixRgb(from: string, to: string, t: number) {
+  const [r1, g1, b1] = rgb(from)
+  const [r2, g2, b2] = rgb(to)
+  const n = (x: number, y: number) => Math.round(x + (y - x) * t)
+  return `${n(r1, r2)},${n(g1, g2)},${n(b1, b2)}`
 }
 
 function parseRgba(value: string) {
@@ -97,12 +116,12 @@ const mix = (from: string, to: string, t: number) => {
 
 const dustColor = (dust: Dust, alpha: number) =>
   dust === 'signal'
-    ? `rgba(255,122,92,${alpha.toFixed(3)})`
+    ? `rgba(255,128,96,${alpha.toFixed(3)})`
     : dust === 'steel'
-      ? `rgba(196,202,212,${alpha.toFixed(3)})`
+      ? `rgba(206,212,224,${alpha.toFixed(3)})`
       : dust === 'mixed'
-        ? `rgba(238,214,178,${alpha.toFixed(3)})`
-        : `rgba(233,205,150,${alpha.toFixed(3)})`
+        ? `rgba(246,222,182,${alpha.toFixed(3)})`
+        : `rgba(240,212,154,${alpha.toFixed(3)})`
 
 const smoothstep = (t: number) => {
   const x = Math.min(1, Math.max(0, t))
@@ -110,22 +129,21 @@ const smoothstep = (t: number) => {
 }
 
 type Band = { name: string; start: number; end: number }
-type Particle = { x: number; y: number; z: number; r: number; drift: number; phase: number }
+type Mote = { x: number; y: number; z: number; r: number; drift: number; phase: number }
 
 export default function ScrollContinuum() {
-  const hazeRef = useRef<HTMLDivElement>(null)
+  const auraRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const chapterRef = useRef<HTMLSpanElement>(null)
   const railRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const haze = hazeRef.current
+    const aura = auraRef.current
     const canvas = canvasRef.current
-    if (!haze || !canvas) return
+    if (!aura || !canvas) return
 
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-    /* ── capability probe ─────────────────────────────────────────────────── */
     const nav = navigator as Navigator & { deviceMemory?: number; hardwareConcurrency?: number }
     const narrow = window.matchMedia('(max-width: 767px)').matches
     const lowPower =
@@ -145,7 +163,6 @@ export default function ScrollContinuum() {
         .sort((a, b) => a.start - b.start)
     }
 
-    /** continuous position in the chapter sequence, e.g. 2.4 = 40% through chapter 2 */
     const chapterPosition = (scrollY: number) => {
       if (!bands.length) return 0
       const centre = scrollY + window.innerHeight / 2
@@ -160,52 +177,52 @@ export default function ScrollContinuum() {
       return bands.length - 1
     }
 
-    const worldAt = (position: number) => {
+    const moodAt = (position: number) => {
       if (!bands.length) return FALLBACK
       const index = Math.max(0, Math.min(bands.length - 1, Math.floor(position)))
       const nextIndex = Math.min(bands.length - 1, index + 1)
       const t = smoothstep(position - index)
-      const from = worldFor(bands[index].name)
-      const to = worldFor(bands[nextIndex].name)
+      const from = moodFor(bands[index].name)
+      const to = moodFor(bands[nextIndex].name)
       return {
         a: mix(from.a, to.a, t),
         b: mix(from.b, to.b, t),
         c: mix(from.c, to.c, t),
+        key: mixRgb(from.key, to.key, t),
+        alt: mixRgb(from.alt, to.alt, t),
         dust: t < 0.5 ? from.dust : to.dust,
         density: from.density + (to.density - from.density) * t,
         contour: from.contour + (to.contour - from.contour) * t,
         speed: from.speed + (to.speed - from.speed) * t,
+        commit: from.commit + (to.commit - from.commit) * t,
         label: t < 0.5 ? from.label : to.label,
       }
     }
 
     measure()
 
-    /* ── static fallback for reduced motion ───────────────────────────────── */
+    /* ── reduced motion: strong static colour per chapter, no canvas ──────── */
     if (reduced) {
-      const initial = worldAt(chapterPosition(window.scrollY))
-      haze.style.background = `radial-gradient(60% 45% at 22% 18%, ${initial.a}, transparent 70%),
-        radial-gradient(55% 42% at 80% 76%, ${initial.b}, transparent 72%)`
-      const onScroll = () => {
-        const w = worldAt(chapterPosition(window.scrollY))
-        haze.style.background = `radial-gradient(60% 45% at 22% 18%, ${w.a}, transparent 70%),
-          radial-gradient(55% 42% at 80% 76%, ${w.b}, transparent 72%)`
+      const paint = () => {
+        const w = moodAt(chapterPosition(window.scrollY))
+        aura.style.background = `radial-gradient(70% 52% at 24% 16%, ${w.a}, transparent 70%),
+          radial-gradient(62% 48% at 78% 80%, ${w.b}, transparent 72%)`
         if (chapterRef.current) chapterRef.current.textContent = w.label
       }
       const onResize = () => {
         measure()
-        onScroll()
+        paint()
       }
-      window.addEventListener('scroll', onScroll, { passive: true })
+      window.addEventListener('scroll', paint, { passive: true })
       window.addEventListener('resize', onResize)
-      onScroll()
+      paint()
       return () => {
-        window.removeEventListener('scroll', onScroll)
+        window.removeEventListener('scroll', paint)
         window.removeEventListener('resize', onResize)
       }
     }
 
-    /* ── canvas setup ─────────────────────────────────────────────────────── */
+    /* ── canvas ───────────────────────────────────────────────────────────── */
     const ctx = canvas.getContext('2d', { alpha: true })
     if (!ctx) return
 
@@ -224,18 +241,26 @@ export default function ScrollContinuum() {
     }
     resize()
 
-    const maxParticles = lowPower ? 34 : 78
-    const particles: Particle[] = []
-    for (let i = 0; i < maxParticles; i += 1) {
-      particles.push({
-        x: Math.random(),
-        y: Math.random(),
-        z: 0.2 + Math.random() * 0.8,
-        r: 0.5 + Math.random() * 1.5,
-        drift: 0.4 + Math.random() * 1.2,
-        phase: Math.random() * Math.PI * 2,
-      })
-    }
+    const maxMotes = lowPower ? 42 : 110
+    const maxBokeh = lowPower ? 5 : 12
+
+    const motes: Mote[] = Array.from({ length: maxMotes }, () => ({
+      x: Math.random(),
+      y: Math.random(),
+      z: 0.15 + Math.random() * 0.85,
+      r: 0.6 + Math.random() * 2.2,
+      drift: 0.4 + Math.random() * 1.3,
+      phase: Math.random() * Math.PI * 2,
+    }))
+
+    const bokeh: Mote[] = Array.from({ length: maxBokeh }, () => ({
+      x: Math.random(),
+      y: Math.random(),
+      z: 0.7 + Math.random() * 0.3,
+      r: 26 + Math.random() * 72,
+      drift: 0.2 + Math.random() * 0.5,
+      phase: Math.random() * Math.PI * 2,
+    }))
 
     /* ── scroll sampling ──────────────────────────────────────────────────── */
     let scrollY = window.scrollY
@@ -244,6 +269,8 @@ export default function ScrollContinuum() {
     let velocity = 0
     let smoothVelocity = 0
     let ticking = false
+    let lastChapter = Math.round(target)
+    let burst = 0
 
     const readScroll = () => {
       const previous = scrollY
@@ -267,7 +294,6 @@ export default function ScrollContinuum() {
     window.addEventListener('resize', onResize)
     window.addEventListener('orientationchange', onResize)
 
-    /* fonts settle after load and shift layout — re-measure once they do */
     if (document.fonts?.ready) {
       document.fonts.ready.then(() => {
         measure()
@@ -293,77 +319,134 @@ export default function ScrollContinuum() {
       clock += delta / 1000
 
       target = chapterPosition(scrollY)
-      // temporal smoothing — chapter changes ease instead of cutting
-      position += (target - position) * 0.085
-      smoothVelocity += (velocity - smoothVelocity) * 0.12
+      position += (target - position) * 0.1
+      smoothVelocity += (velocity - smoothVelocity) * 0.16
       velocity *= 0.86
 
-      const world = worldAt(position)
-      const energy = Math.min(1, Math.abs(smoothVelocity) / 55)
+      /* chapter boundary → fire a bloom + burst */
+      const nearest = Math.round(position)
+      if (nearest !== lastChapter) {
+        lastChapter = nearest
+        burst = 1
+      }
+      burst *= 0.94
 
-      /* 1. haze — slides and recolours with the chapter */
-      const driftX = Math.sin(clock * 0.12 * world.speed) * 3
-      haze.style.background = `radial-gradient(58% 44% at ${20 + position * 6 + driftX}% ${
-        10 + (position % 1) * 34
-      }%, ${world.a}, transparent 70%),
-        radial-gradient(52% 40% at ${82 - position * 5 - driftX}% ${
-          88 - (position % 1) * 26
-        }%, ${world.b}, transparent 72%),
-        radial-gradient(78% 54% at 50% ${44 + (position % 1) * 16}%, ${world.c}, transparent 78%)`
+      const mood = moodAt(position)
+      const energy = Math.min(1, Math.abs(smoothVelocity) / 30)
 
-      /* 2. contour field + 3. dust */
+      /* 1. aura — two huge fields sliding, colour committed to the chapter */
+      const driftX = Math.sin(clock * 0.16 * mood.speed) * 6
+      const driftY = Math.cos(clock * 0.11 * mood.speed) * 4
+      aura.style.background = `radial-gradient(${64 + mood.commit * 14}% ${50 + mood.commit * 10}% at ${
+        22 + position * 5 + driftX
+      }% ${12 + (position % 1) * 26 + driftY}%, ${mood.a}, transparent 68%),
+        radial-gradient(${56 + mood.commit * 12}% ${44 + mood.commit * 8}% at ${
+          80 - position * 4 - driftX
+        }% ${84 - (position % 1) * 22 - driftY}%, ${mood.b}, transparent 70%),
+        radial-gradient(90% 62% at 50% ${42 + (position % 1) * 18}%, ${mood.c}, transparent 82%)`
+
       ctx.clearRect(0, 0, width, height)
 
-      const amplitude = (14 + world.contour * 46) * (1 + energy * 0.9)
-      const lines = lowPower ? 3 : 5
-      ctx.lineWidth = 1
+      /* 2. contour — warped bands, ghosted mirror, whipping on velocity */
+      const amplitude = (34 + mood.contour * 118) * (1 + energy * 1.4 + burst * 0.7)
+      const lines = lowPower ? 3 : 6
+      const steps = lowPower ? 7 : 12
       for (let line = 0; line < lines; line += 1) {
-        const yBase = height * (0.18 + line * 0.17) + Math.sin(clock * 0.3 + line) * 6
-        const phase = clock * (0.16 + line * 0.05) * world.speed + line * 1.7
+        const yBase = height * (0.1 + line * 0.16) + Math.sin(clock * 0.34 + line) * 10
+        const phase = clock * (0.2 + line * 0.06) * mood.speed + line * 1.7
         ctx.beginPath()
-        const steps = lowPower ? 6 : 10
         for (let step = 0; step <= steps; step += 1) {
           const x = (step / steps) * width
           const wave =
             Math.sin((step / steps) * Math.PI * 2 + phase) * amplitude +
-            Math.sin((step / steps) * Math.PI * 4.2 + phase * 1.6) * amplitude * 0.35
+            Math.sin((step / steps) * Math.PI * 4.6 + phase * 1.7) * amplitude * 0.4
           const y = yBase + wave
           if (step === 0) ctx.moveTo(x, y)
           else ctx.lineTo(x, y)
         }
         const gradient = ctx.createLinearGradient(0, 0, width, 0)
-        const alpha = 0.05 + world.contour * 0.05 + energy * 0.04
-        gradient.addColorStop(0, dustColor(world.dust, 0))
-        gradient.addColorStop(0.5, dustColor(world.dust, alpha))
-        gradient.addColorStop(1, dustColor(world.dust, 0))
+        const alpha = (0.16 + mood.contour * 0.2 + energy * 0.16) * (1 + burst * 0.8)
+        gradient.addColorStop(0, dustColor(mood.dust, 0))
+        gradient.addColorStop(0.5, dustColor(mood.dust, Math.min(0.7, alpha)))
+        gradient.addColorStop(1, dustColor(mood.dust, 0))
         ctx.strokeStyle = gradient
+        ctx.lineWidth = 1 + mood.contour * 1.6 + energy * 1.4
         ctx.stroke()
+
+        /* ghost — brighter reflected band, sells the depth */
+        if (!lowPower && line % 2 === 0) {
+          ctx.save()
+          ctx.globalAlpha = 0.4
+          ctx.translate(0, height * 1.9)
+          ctx.scale(1, -1)
+          ctx.stroke()
+          ctx.restore()
+        }
       }
 
-      const activeCount = Math.round(maxParticles * (0.35 + world.density * 0.65))
-      for (let i = 0; i < activeCount; i += 1) {
-        const p = particles[i]
-        const drift = Math.sin(clock * 0.22 * p.drift + p.phase) * 12 * p.z
-        const rise = (clock * 8 * p.z * world.speed) % (height + 140)
+      /* 3. far dust */
+      const activeMotes = Math.round(maxMotes * (0.4 + mood.density * 0.6))
+      for (let i = 0; i < activeMotes; i += 1) {
+        const p = motes[i]
+        const drift = Math.sin(clock * 0.24 * p.drift + p.phase) * 16 * p.z
+        const rise = (clock * 10 * p.z * mood.speed) % (height + 160)
         const px = p.x * width + drift
-        let py = p.y * height - rise - position * 26 * p.z
+        let py = p.y * height - rise - position * 34 * p.z
         py = ((py % height) + height) % height
 
-        const alpha = (0.08 + p.z * 0.26) * (lowPower ? 0.85 : 1)
-        const radius = p.r * (0.7 + p.z * 1.4)
-        // velocity stretch: flicks pull the motes into streaks
-        const stretch = 1 + energy * 5 * p.z
+        const alpha = (0.14 + p.z * 0.4) * (lowPower ? 0.9 : 1)
+        const radius = p.r * (0.7 + p.z * 1.6)
+        const stretch = 1 + energy * 7 * p.z + burst * 2
 
         ctx.beginPath()
-        ctx.fillStyle = dustColor(world.dust, alpha)
+        ctx.fillStyle = dustColor(mood.dust, alpha)
         ctx.ellipse(px, py, radius, radius * stretch, 0, 0, Math.PI * 2)
         ctx.fill()
       }
 
+      /* 4. bokeh — near-field foreground orbs, blurred and warm */
+      const activeBokeh = Math.round(maxBokeh * (0.45 + mood.density * 0.55))
+      for (let i = 0; i < activeBokeh; i += 1) {
+        const b = bokeh[i]
+        const drift = Math.sin(clock * 0.18 * b.drift + b.phase) * 44 * b.z
+        const rise = (clock * 16 * b.z * mood.speed) % (height + 420)
+        const bx = b.x * width + drift
+        let by = b.y * height - rise - position * 90 * b.z
+        by = ((by % height) + height) % height
+
+        const glow = ctx.createRadialGradient(bx, by, 0, bx, by, b.r)
+        glow.addColorStop(0, `rgba(${mood.key},${(0.1 + b.z * 0.1).toFixed(3)})`)
+        glow.addColorStop(0.6, `rgba(${mood.alt},${(0.05 + b.z * 0.06).toFixed(3)})`)
+        glow.addColorStop(1, 'rgba(0,0,0,0)')
+        ctx.fillStyle = glow
+        ctx.beginPath()
+        ctx.arc(bx, by, b.r, 0, Math.PI * 2)
+        ctx.fill()
+      }
+
+      /* 5. horizon seam — flares at chapter boundaries */
+      const seamY = height * (0.52 + Math.sin(clock * 0.16) * 0.05)
+      const seam = ctx.createLinearGradient(0, 0, width, 0)
+      const seamAlpha = 0.1 + burst * 0.65 + energy * 0.12
+      seam.addColorStop(0, 'rgba(0,0,0,0)')
+      seam.addColorStop(0.5, `rgba(${mood.key},${Math.min(0.85, seamAlpha).toFixed(3)})`)
+      seam.addColorStop(1, 'rgba(0,0,0,0)')
+      ctx.fillStyle = seam
+      const seamHeight = 1 + burst * 5
+      ctx.fillRect(0, seamY - seamHeight / 2, width, seamHeight)
+
+      if (burst > 0.04) {
+        const flare = ctx.createRadialGradient(width / 2, seamY, 0, width / 2, seamY, width * 0.6)
+        flare.addColorStop(0, `rgba(${mood.key},${(burst * 0.16).toFixed(3)})`)
+        flare.addColorStop(1, 'rgba(0,0,0,0)')
+        ctx.fillStyle = flare
+        ctx.fillRect(0, seamY - height * 0.4, width, height * 0.8)
+      }
+
       /* HUD */
-      if (chapterRef.current && world.label !== lastLabel) {
-        lastLabel = world.label
-        chapterRef.current.textContent = world.label
+      if (chapterRef.current && mood.label !== lastLabel) {
+        lastLabel = mood.label
+        chapterRef.current.textContent = mood.label
       }
       if (railRef.current) {
         const total = Math.max(1, bands.length - 1)
@@ -399,31 +482,38 @@ export default function ScrollContinuum() {
     <>
       <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
         <div
-          ref={hazeRef}
+          ref={auraRef}
           className="absolute inset-0"
           style={{
-            background: `radial-gradient(58% 44% at 20% 10%, ${WORLDS.hero.a}, transparent 70%),
-              radial-gradient(52% 40% at 82% 88%, ${WORLDS.hero.b}, transparent 72%)`,
+            background: `radial-gradient(70% 52% at 24% 16%, ${MOODS.hero.a}, transparent 70%),
+              radial-gradient(62% 48% at 78% 80%, ${MOODS.hero.b}, transparent 72%)`,
           }}
         />
         <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
-        {/* legibility, always: vertical wash + vignette above the artwork */}
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,8,7,0.55)_0%,rgba(8,8,7,0.10)_28%,rgba(8,8,7,0.10)_72%,rgba(8,8,7,0.62)_100%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(120%_90%_at_50%_50%,transparent_45%,rgba(8,8,7,0.55)_100%)]" />
+        {/*
+          Legibility is now bought locally, not with a global scrim: only the
+          extreme top/bottom edges darken so the header and footer stay readable
+          while the middle of the page lets the world through.
+        */}
+        <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-ink/70 via-ink/20 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-ink/70 via-ink/20 to-transparent" />
       </div>
 
-      {/* persistent chapter HUD — you always know where you are in the journey */}
       <div className="pointer-events-none fixed bottom-5 left-5 z-[70] hidden select-none items-center gap-3 md:flex">
-        <div className="flex w-28 flex-col gap-1.5">
-          <span className="font-mono text-[8px] uppercase tracking-[0.28em] text-bone/30">Chapter</span>
+        <div className="flex w-32 flex-col gap-1.5">
+          <span className="font-mono text-[8px] uppercase tracking-[0.28em] text-bone/40">Chapter</span>
           <span
             ref={chapterRef}
-            className="truncate font-mono text-[9.5px] uppercase tracking-[0.18em] text-bone/70"
+            className="truncate font-mono text-[10px] uppercase tracking-[0.16em] text-bone/80"
           >
             Opening
           </span>
           <div className="h-px w-full bg-white/12">
-            <div ref={railRef} className="h-px origin-left bg-gradient-to-r from-gold to-signal" style={{ transform: 'scaleX(0)' }} />
+            <div
+              ref={railRef}
+              className="h-px origin-left bg-gradient-to-r from-gold to-signal"
+              style={{ transform: 'scaleX(0)' }}
+            />
           </div>
         </div>
       </div>

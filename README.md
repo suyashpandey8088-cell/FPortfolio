@@ -128,20 +128,35 @@ an ordered sequence of chapters it moves through as you scroll:
 hero → intro → tunnel → intro → intro → padma → padma-study → combat → combat-study → close
 ```
 
-Each chapter declares a *world*: haze colours, dust tint, particle density, contour amplitude and
-drift speed. The continuum **interpolates between whichever two chapters are adjacent** (with
-`smoothstep`), so the world morphs rather than cuts. Three stacked layers:
+Each chapter declares a *mood*: a **brand colour it commits to**, a hue wash, contour energy, dust
+character and a `commit` weight. The continuum **interpolates between whichever two chapters are
+adjacent** (with `smoothstep`), so the world morphs rather than cuts. Five layers, back to front:
 
-1. **haze** — three radial fields that slide and recolour as chapters pass
-2. **contour field** — warped gradient bands whose amplitude follows the chapter's mood
-3. **dust** — depth-parallax motes that **stretch with scroll velocity**, so a flick pulls them into
-   streaks and stopping lets them settle
+1. **aura** — two huge drifting colour fields, saturated to the chapter's brand hue
+2. **contour** — warped gradient bands with a mirrored ghost, amplitude `34–152px`, whipping hard on
+   scroll velocity
+3. **far dust** — depth-parallax specks that stretch into streaks when you flick
+4. **bokeh** — near-field blurred orbs for real foreground depth
+5. **horizon** — a glowing seam that **flares on every chapter boundary**, alongside a dust burst,
+   so crossing a section is a felt event
 
 A persistent bottom-left **chapter HUD** names where you are and carries a progress hairline.
 
-Because the continuum is the stage, every section paints transparent — a single `bg-ink/35` wash on
-long-form study copy and a gradient scrim on the footer are the only local opacity, and two wash
-layers inside the continuum (vertical + vignette) guarantee text contrast at every world state.
+### Legibility without a global scrim
+
+The expressive pass removed the full-screen darkening that previously muted the artwork. Contrast is
+now bought **locally**: only ~150px gradients at the very top and bottom edge (for the header and
+footer), a single `bg-ink/35` wash on long-form study copy, and a gradient scrim on the footer. The
+middle of the page lets the world through at full strength — measured at **4.6× the visible chroma**
+of the earlier version at the same chapter.
+
+### Staged chapter openings
+
+`src/components/ChapterScene.tsx` provides a reusable pinned set piece (tall section + sticky
+viewport frame) where content settles out of depth: scale `1.12 → 1`, a few degrees of off-axis
+rotation, and an upward lift. Account openings use the same idea directly (`AccountPanel`): the
+heading block arrives at `scale 1.14 → 1` with an opacity ramp, and its rule draws out from 20% to
+full width. Both bail to static, fully-visible markup under `prefers-reduced-motion`.
 
 Engineering: one passive frame-throttled scroll read, one RAF loop, chapter bands measured only on
 layout change (plus once after fonts settle), reduced motion → static per-chapter gradient with no

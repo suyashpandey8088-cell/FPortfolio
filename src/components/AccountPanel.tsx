@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { motion, useScroll, useTransform } from 'framer-motion'
+import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion'
 import type { Account } from '../content/accounts'
 import { accountBase, useContent, type ViewerItem } from '../store/content'
 import { Editable, EditableList, Reveal } from './primitives'
@@ -169,6 +169,16 @@ export default function AccountPanel({ account }: { account: Account }) {
   const ref = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] })
   const drift = useTransform(scrollYProgress, [0, 1], ['-3%', '3%'])
+  /* set-piece: the opening block arrives out of depth as the chapter begins */
+  const reduced = useReducedMotion()
+  /* ranges are fixed (hooks must be unconditional); `reduced` gates the values */
+  const headScale = useTransform(scrollYProgress, [0, 0.22], [1.14, 1])
+  const headOpacity = useTransform(scrollYProgress, [0, 0.16], [0.25, 1])
+  const headY = useTransform(scrollYProgress, [0, 0.3], ['7%', '0%'])
+  const ruleScale = useTransform(scrollYProgress, [0, 0.3], [0.2, 1])
+  const staged = reduced
+    ? { scale: 1, opacity: 1, y: '0%' as const }
+    : { scale: headScale, opacity: headOpacity, y: headY }
 
   return (
     <section
@@ -205,7 +215,9 @@ export default function AccountPanel({ account }: { account: Account }) {
       </motion.span>
 
       <div className="relative mx-auto max-w-[1600px] px-6 py-20 md:px-10 md:py-28">
-        {/* section header */}
+        {/* section header — arrives out of depth */}
+        <motion.div style={staged}>
+        <motion.div style={{ scaleX: reduced ? 1 : ruleScale }} className="mb-8 h-px origin-left bg-gradient-to-r from-gold/60 via-white/15 to-transparent" />
         <div className="flex flex-wrap items-center justify-between gap-6">
           <Reveal>
             <div className="flex items-center gap-4">
@@ -243,6 +255,7 @@ export default function AccountPanel({ account }: { account: Account }) {
             </a>
           </Reveal>
         </div>
+        </motion.div>
 
         {/* headline */}
         <div className="mt-8">

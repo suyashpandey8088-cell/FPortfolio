@@ -144,6 +144,14 @@ try {
     new URL('../src/components/ScrollContinuum.tsx', import.meta.url),
     'utf8',
   )
+  const sceneSrc = await readFile(
+    new URL('../src/components/ChapterScene.tsx', import.meta.url),
+    'utf8',
+  )
+  const accountSrc = await readFile(
+    new URL('../src/components/AccountPanel.tsx', import.meta.url),
+    'utf8',
+  )
 
   // the "Est." badge must not be a superscript inside the tight headline line box
   // (strip JSX comments first so prose about the old bug cannot fail the check)
@@ -207,6 +215,25 @@ try {
     ),
   )
   check('continuum has a chapter HUD', backdropSrc.includes('chapterRef'))
+  check('continuum fires chapter-boundary events', backdropSrc.includes('burst = 1'))
+  check('continuum commits to brand colour', backdropSrc.includes('commit'))
+  check('continuum has near-field bokeh', backdropSrc.includes('bokeh'))
+  check('continuum has a horizon seam', backdropSrc.includes('seamY'))
+  check('continuum whips on velocity', backdropSrc.includes('Math.abs(smoothVelocity) / 30'))
+  check(
+    'continuum no longer mutes itself with a global scrim',
+    !/rgba\(8,8,7,0\.[5-9]/.test(backdropSrc),
+  )
+  check('chapter set piece component exists', typeof sceneSrc === 'string' && sceneSrc.includes('sticky top-0'))
+  check('set piece bails on reduced motion', sceneSrc.includes('useReducedMotion'))
+  check(
+    'account opening is staged',
+    accountSrc.includes('headScale') && accountSrc.includes('ruleScale'),
+  )
+  check(
+    'staged motion is gated for reduced motion',
+    accountSrc.includes('const staged = reduced'),
+  )
   check('continuum interpolates between chapters', backdropSrc.includes('smoothstep'))
   check('continuum reacts to scroll velocity', backdropSrc.includes('smoothVelocity'))
   check('continuum contour field', backdropSrc.includes('createLinearGradient'))
