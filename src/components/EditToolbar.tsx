@@ -1,10 +1,24 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useContent } from '../store/content'
 
 export default function EditToolbar() {
   const { editing, setEditing, resetAll, exportJson, importJson, isDirty } = useContent()
   const [panel, setPanel] = useState<'none' | 'io'>('none')
+  const [enabled, setEnabled] = useState(false)
+
+  /* The editor is a tool for the site owner, not a visitor-facing control.
+     It only appears with ?edit=1 in the URL. */
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    setEnabled(params.get('edit') === '1')
+  }, [])
+
+  useEffect(() => {
+    if (!enabled && editing) setEditing(false)
+  }, [enabled, editing, setEditing])
+
+  if (!enabled) return null
   const [raw, setRaw] = useState('')
   const [status, setStatus] = useState('')
 

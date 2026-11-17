@@ -195,6 +195,20 @@ export function useContent() {
   return ctx
 }
 
+/**
+ * Content paths address accounts by position, not by id, because `accounts` is an
+ * array (`accounts.0.name`). Components must resolve the index from the id before
+ * building any editable path, otherwise lookups silently fall through to ''.
+ */
+export function accountBase(
+  accounts: Account[],
+  id: string,
+  suffix?: string,
+): string {
+  const index = Math.max(0, accounts.findIndex((account) => account.id === id))
+  return `accounts.${index}${suffix ? `.${suffix}` : ''}`
+}
+
 export function useAccount(id: string): Account {
   const { content } = useContent()
   return content.accounts.find((a) => a.id === id) ?? content.accounts[0]

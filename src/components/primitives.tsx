@@ -33,9 +33,12 @@ export function Editable({
   const Tag: any = as
 
   if (!editing) {
+    /* Placeholder copy is an editing affordance only — a published page must never
+       show "Add text…" to a client. Render nothing when a field is empty. */
+    if (!value.trim()) return null
     return (
       <Tag className={className} style={style}>
-        {value || placeholder}
+        {value}
       </Tag>
     )
   }

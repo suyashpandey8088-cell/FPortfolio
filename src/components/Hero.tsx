@@ -172,7 +172,7 @@ export default function Hero({ onOpenAccount }: { onOpenAccount: (id: string) =>
                 <SplitLines text="BEHIND" delay={0.25} />
               </span>
               <span className="block">
-                <span className="overflow-hidden inline-block">
+                <span className="inline-block overflow-hidden">
                   <motion.span
                     initial={{ y: '110%' }}
                     animate={{ y: '0%' }}

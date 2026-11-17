@@ -1,21 +1,34 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { useState } from 'react'
 import type { Account } from '../content/accounts'
-import { useContent } from '../store/content'
+import { accountBase, useContent } from '../store/content'
 import { Editable, EditableList, Reveal } from './primitives'
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
-export default function CaseStudy({ account }: { account: Account }) {
-  const [open, setOpen] = useState(false)
-  const [activeSection, setActiveSection] = useState(0)
-  const { editing, set, openViewer } = useContent()
+export default function CaseStudy({
+  account,
+  initialOpen = false,
+  initialSection = 0,
+}: {
+  account: Account
+  initialOpen?: boolean
+  initialSection?: number
+}) {
+  const [open, setOpen] = useState(initialOpen)
+  const [activeSection, setActiveSection] = useState(initialSection)
+  const { content, editing, set, openViewer } = useContent()
   const isCombat = account.id === 'combat'
-  const base = `accounts.${account.id}.caseStudy`
+  const base = accountBase(content.accounts, account.id, 'caseStudy')
   const accent = isCombat ? 'signal' : 'gold'
   const accentText = isCombat ? 'text-signal' : 'text-gold'
   const accentBorder = isCombat ? 'border-signal/45' : 'border-gold/45'
   const accentBg = isCombat ? 'bg-signal' : 'bg-gold'
+
+  const verified = (value: string) => {
+    const cleaned = (value ?? '').trim()
+    return Boolean(cleaned) && cleaned !== '—' && cleaned !== '-' && cleaned !== 'N/A'
+  }
 
   const section = account.caseStudy.sections[activeSection]
 
@@ -192,15 +205,16 @@ export default function CaseStudy({ account }: { account: Account }) {
                         Performance metrics
                       </h5>
                       <p className="mt-4 max-w-2xl text-[0.94rem] leading-relaxed text-bone/60">
-                        Placeholders are shown deliberately. No follower count, engagement rate, reach figure or
-                        business growth number is published until it can be verified — and every field below is
-                        editable, so verified values can be dropped in directly from Instagram Insights.
+                        No follower count, engagement rate, reach figure or business growth number is
+                        published here until it can be verified. Every field is editable, so verified values
+                        can be dropped in directly from Instagram Insights.
                       </p>
 
                       <div className="mt-7 grid grid-cols-2 gap-px overflow-hidden rounded-sm border border-white/10 bg-white/10 sm:grid-cols-3">
-                        {account.caseStudy.metrics.map((metric, index) => {
-                          const empty = !metric.value || metric.value.trim() === '—'
-                          return (
+                        {account.caseStudy.metrics
+                          .map((metric, index) => ({ metric, index }))
+                          .filter(({ metric }) => editing || verified(metric.value))
+                          .map(({ metric, index }) => (
                             <div
                               key={metric.id}
                               className={`p-4 ${isCombat ? 'bg-[#0b0b0d]' : 'bg-[#0d0a06]'}`}
@@ -208,9 +222,7 @@ export default function CaseStudy({ account }: { account: Account }) {
                               <Editable
                                 path={`${base}.metrics.${index}.value`}
                                 as="p"
-                                className={`tabnum text-[clamp(1.5rem,3vw,2.1rem)] font-semibold leading-none ${
-                                  empty ? 'text-bone/20' : 'text-bone'
-                                }`}
+                                className="tabnum text-[clamp(1.5rem,3vw,2.1rem)] font-semibold leading-none text-bone"
                                 ariaLabel={`${metric.label} value`}
                               />
                               <p className="mt-2 text-[10.5px] leading-tight text-bone/55">
@@ -231,9 +243,21 @@ export default function CaseStudy({ account }: { account: Account }) {
                                 </button>
                               )}
                             </div>
-                          )
-                        })}
+                          ))}
                       </div>
+
+                      {!editing && account.caseStudy.metrics.every((metric) => !verified(metric.value)) && (
+                        <div className="mt-4 flex flex-wrap items-center gap-2">
+                          {account.caseStudy.metrics.map((metric) => (
+                            <span
+                              key={metric.id}
+                              className="rounded-full border border-white/12 px-2.5 py-1 font-mono text-[8px] uppercase tracking-[0.14em] text-bone/35"
+                            >
+                              {metric.label}
+                            </span>
+                          ))}
+                        </div>
+                      )}
 
                       {editing && (
                         <button
